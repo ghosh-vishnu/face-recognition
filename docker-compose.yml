@@ -1,0 +1,18 @@
+# Face Verification API — production run
+# On server: copy .env.example to .env, fill values, then: docker compose up -d
+services:
+  api:
+    build: .
+    container_name: face-verify-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file: .env
+    environment:
+      - UPLOAD_DIR=/app/data/uploads
+      - DATABASE_URL=sqlite:////app/data/face_verify.db
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  app_data:

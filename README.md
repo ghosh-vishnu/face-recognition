@@ -68,6 +68,10 @@ Copy `.env.example` to `.env` and adjust:
 
 **Cloudinary:** When `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are set, verified images are uploaded to Cloudinary. Response `stored_images[].storage_path` will be the Cloudinary **secure URL**. If not set, images are saved locally under `UPLOAD_DIR`.
 
+### Docker deployment (production)
+
+Fresh Ubuntu server par deploy: **[DEPLOY.md](DEPLOY.md)** — Docker install, clone, `.env` setup, `docker compose up -d`. API will be at `http://SERVER_IP:8000`.
+
 ## API summary
 
 | Method | Endpoint               | Description                          |

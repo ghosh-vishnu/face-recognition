@@ -1,0 +1,33 @@
+# Git and env
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+.venv
+venv
+env
+
+# Local data
+uploads/
+*.db
+*.sqlite3
+data/
+
+# IDE and docs (optional: keep API.md if you want in image)
+.vscode
+.idea
+*.md
+!README.md
+
+# Tests and misc
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov
+node_modules
