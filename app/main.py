@@ -5,12 +5,10 @@ from pathlib import Path
 import uvicorn
 from dotenv import load_dotenv
 
-# Force Cloudinary (and env) from project .env only — clear any system/shell CLOUDINARY_* first
+# Load .env if present (local dev); Docker uses env_file / -e, don't overwrite those
 _env_path = Path(__file__).resolve().parent.parent / ".env"
-for key in list(os.environ.keys()):
-    if key.startswith("CLOUDINARY_"):
-        del os.environ[key]
-load_dotenv(dotenv_path=_env_path, override=True)
+if _env_path.exists():
+    load_dotenv(dotenv_path=_env_path, override=True)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

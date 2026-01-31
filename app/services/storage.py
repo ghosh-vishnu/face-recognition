@@ -25,16 +25,13 @@ def _env_paths() -> list[Path]:
 
 
 def _get_cloudinary_config() -> tuple[str, str, str, str]:
-    """Read Cloudinary credentials from .env file only (no process env)."""
-    for key in list(os.environ.keys()):
-        if key.startswith("CLOUDINARY_"):
-            del os.environ[key]
+    """Read Cloudinary credentials: .env file first (local dev), then os.environ (Docker/server)."""
     cloud_name = api_key = api_secret = ""
     folder = "face_verify"
     for env_path in _env_paths():
         if not env_path.exists():
             continue
-        with open(env_path, encoding="utf-8-sig") as f:  # utf-8-sig strips BOM
+        with open(env_path, encoding="utf-8-sig") as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#") or "=" not in line:
@@ -53,8 +50,18 @@ def _get_cloudinary_config() -> tuple[str, str, str, str]:
                 elif k == "CLOUDINARY_FOLDER" and v:
                     folder = v
         if cloud_name and api_key and api_secret:
-            logger.info("Cloudinary .env loaded from %s", env_path)
+            logger.info("Cloudinary config from .env: %s", env_path)
             break
+    # Docker/server: no .env in container — use env vars from env_file / -e
+    if not cloud_name:
+        cloud_name = (os.environ.get("CLOUDINARY_CLOUD_NAME") or "").strip()
+    if not api_key:
+        api_key = (os.environ.get("CLOUDINARY_API_KEY") or "").strip()
+    if not api_secret:
+        api_secret = (os.environ.get("CLOUDINARY_API_SECRET") or "").strip()
+    env_folder = (os.environ.get("CLOUDINARY_FOLDER") or "").strip()
+    if env_folder:
+        folder = env_folder
     return cloud_name, api_key, api_secret, folder
 
 
