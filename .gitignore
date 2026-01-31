@@ -40,6 +40,9 @@ htmlcov/
 *.sqlite3
 instance/
 
+# Verified image storage (local)
+uploads/
+
 # IDEs and editors
 .vscode/
 .idea/
@@ -49,9 +52,6 @@ instance/
 # OS files
 .DS_Store
 Thumbs.db
-
-# Docker
-.dockerignore
 
 # Node / build artifacts (if any)
 node_modules/

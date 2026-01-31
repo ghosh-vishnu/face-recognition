@@ -1,72 +1,66 @@
+"""Face Verification API — 3-image same-person verification for dating app profile."""
+import logging
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import uvicorn
 
-from app.api.verify import router as verify_router
+from app.api.verify import get_services, router as verify_router
+from app.config import CORS_ORIGINS
+from app.db import models  # noqa: F401 — register ORM
+from app.db.database import Base, engine
 
-# Create FastAPI application
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
+
 app = FastAPI(
     title="Face Verification API",
-    description="Production-ready face verification system for 3-image comparison",
+    description="Verify 3 images are the same person; optionally store verified images.",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
-# Configure CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Include verification router
 app.include_router(verify_router, prefix="/api", tags=["verification"])
 
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information"""
+    """Service info and endpoint list."""
     return {
         "name": "Face Verification API",
         "version": "1.0.0",
         "status": "running",
         "docs": "/docs",
         "endpoints": {
-            "verify": "/api/verify (POST)",
-            "health": "/api/health (GET)"
-        }
+            "verify": "POST /api/verify",
+            "verify_and_store": "POST /api/verify-and-store",
+            "health": "GET /api/health",
+        },
     }
 
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize services on startup"""
-    print("\n" + "="*60)
-    print("Starting Face Verification API")
-    print("="*60)
-    print("Loading InsightFace models...")
-    print("This may take a moment on first run...")
-    print("="*60 + "\n")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    print("\n" + "="*60)
-    print("Shutting down Face Verification API")
-    print("="*60 + "\n")
+    """Create DB tables and load face model so /api/health reports healthy."""
+    Base.metadata.create_all(bind=engine)
+    try:
+        get_services()
+    except Exception as e:
+        logging.warning("Model load at startup failed: %s. First request will retry.", e)
 
 
 if __name__ == "__main__":
-    # Run with uvicorn
     uvicorn.run(
-        "main:app",
+        "app.main:app",
         host="0.0.0.0",
         port=8000,
-        reload=True,  # Set to False in production
-        log_level="info"
+        reload=True,
+        log_level="info",
     )

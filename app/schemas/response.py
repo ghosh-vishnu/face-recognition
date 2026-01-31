@@ -49,3 +49,22 @@ class HealthResponse(BaseModel):
     status: str
     model_loaded: bool
     version: str
+
+
+class StoredImageInfo(BaseModel):
+    """Info for one stored image after verification"""
+    id: int
+    storage_path: str
+    original_filename: str
+    mimetype: Optional[str] = None
+    size_bytes: Optional[int] = None
+
+
+class VerifyAndStoreResponse(BaseModel):
+    """Response when verification passes and images are stored"""
+    result: str = Field(..., description="SAME_PERSON")
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    similarity: SimilarityScores
+    message: str
+    stored_images: List[StoredImageInfo] = Field(..., description="Saved image records")
+    image_analyses: Optional[List[ImageAnalysis]] = None

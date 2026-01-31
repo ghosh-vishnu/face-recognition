@@ -1,193 +1,163 @@
-# Backend - Face Verification API
+# Face Verification API
 
-Production-ready FastAPI backend for face verification using InsightFace.
+Production-ready FastAPI service for **3-image same-person verification** (e.g. dating app profile). Verifies that three uploaded images show the same face; optionally stores verified images in the database.
 
 ## Features
 
--  Face detection using InsightFace (Buffalo-L model)
--  ArcFace embeddings (512-dimensional)
--  Quality checks (blur, brightness, face size)
--  Cosine similarity comparison
--  Pairwise verification for 3 images
--  Comprehensive error handling
--  API documentation (Swagger/ReDoc)
+- **Face detection & embedding** — DeepFace (Facenet512), single-face validation
+- **Quality checks** — Blur, brightness, face size
+- **Pairwise similarity** — Cosine similarity; threshold-based same-person decision
+- **Verify only** — `POST /api/verify` (no storage)
+- **Verify and store** — `POST /api/verify-and-store` (saves images to DB when same person)
+- **Health** — `GET /api/health` (model loaded status)
+- **OpenAPI** — `/docs` (Swagger), `/redoc`
 
-## Installation
+## Quick start
 
 ### Prerequisites
 
-- Python 3.10 or higher
+- Python 3.10+
 - pip
 
 ### Setup
 
-1. **Create virtual environment:**
-
 ```bash
+# Clone / cd to project
+cd backend
+
+# Virtual environment (recommended)
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+# Windows:
+venv\Scripts\activate
+# Linux/macOS:
+# source venv/bin/activate
 
-2. **Install dependencies:**
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-3. **Download models:**
-
-First run will automatically download InsightFace models (~500MB).
-
-## Usage
-
-### Start the server:
+### Run
 
 ```bash
-# Development mode (with auto-reload)
+# Development (auto-reload)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-# Production mode
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+# Or from Python
+python -m app.main
 ```
 
-### Test the API:
+First run may download models (~500MB). Then:
+
+- **API docs:** http://localhost:8000/docs  
+- **Health:** http://localhost:8000/api/health  
+
+### Environment (optional)
+
+Copy `.env.example` to `.env` and adjust:
+
+| Variable        | Default              | Description                    |
+|-----------------|----------------------|--------------------------------|
+| `DATABASE_URL`  | `sqlite:///./face_verify.db` | DB connection string   |
+| `UPLOAD_DIR`    | `uploads`            | Directory for verified images  |
+| `CORS_ORIGINS`  | `*`                  | Comma-separated allowed origins |
+| `MAX_IMAGE_SIZE_MB` | `10`            | Max image size (MB)            |
+
+## API summary
+
+| Method | Endpoint               | Description                          |
+|--------|------------------------|--------------------------------------|
+| GET    | `/`                    | Service info & endpoint list          |
+| GET    | `/api/health`          | Health & model loaded status          |
+| POST   | `/api/verify`          | Verify 3 images (same person); no store |
+| POST   | `/api/verify-and-store` | Verify 3 images; if same person, store & return image IDs |
+
+Full request/response examples: see **[API.md](API.md)**.  
+**Service ko call kaise kare (Node.js / cURL / Postman):** see **[CALL_SERVICE.md](CALL_SERVICE.md)**.
+
+## Examples
+
+### cURL — Health
 
 ```bash
-# Health check
 curl http://localhost:8000/api/health
-
-# Verify faces
-curl -X POST http://localhost:8000/api/verify \
-  -F "image1=@face1.jpg" \
-  -F "image2=@face2.jpg" \
-  -F "image3=@face3.jpg"
 ```
 
-## API Endpoints
+Example response:
 
-### POST /api/verify
-
-Verify if 3 images contain the same person.
-
-**Request:**
-- Content-Type: `multipart/form-data`
-- Files: `image1`, `image2`, `image3` (JPEG/PNG)
-
-**Response:**
 ```json
 {
-  "result": "SAME_PERSON",
-  "confidence": 0.87,
-  "similarity": {
-    "img1_img2": 0.88,
-    "img1_img3": 0.86,
-    "img2_img3": 0.87
-  },
-  "analysis": {
-    "min_similarity": 0.86,
-    "max_similarity": 0.88,
-    "avg_similarity": 0.87,
-    "threshold_used": 0.75
-  },
-  "message": "All 3 images contain the SAME person (confidence: 87%)"
+  "status": "healthy",
+  "model_loaded": true,
+  "version": "1.0.0"
 }
 ```
 
-### GET /api/health
+### cURL — Verify (no store)
 
-Check API health and model status.
-
-## Configuration
-
-### Quality Thresholds
-
-Edit `app/services/quality_check.py`:
-
-```python
-MIN_BLUR_SCORE = 100.0  # Laplacian variance
-MIN_BRIGHTNESS = 30
-MAX_BRIGHTNESS = 225
-MIN_FACE_SIZE = 80  # pixels
-MIN_FACE_SCORE = 0.7  # detection confidence
+```bash
+curl -X POST "http://localhost:8000/api/verify" \
+  -F "image1=@photo1.jpg" \
+  -F "image2=@photo2.jpg" \
+  -F "image3=@photo3.jpg"
 ```
 
-### Similarity Threshold
+### cURL — Verify and store (for profile creation)
 
-Edit `app/services/similarity.py`:
-
-```python
-SAME_PERSON_THRESHOLD = 0.75  # Cosine similarity
+```bash
+curl -X POST "http://localhost:8000/api/verify-and-store" \
+  -F "image1=@photo1.jpg" \
+  -F "image2=@photo2.jpg" \
+  -F "image3=@photo3.jpg" \
+  -F "user_id=user_abc123"
 ```
 
-## Project Structure
+Success (200) returns `result: "SAME_PERSON"` and `stored_images` with `id`, `storage_path`, `original_filename`, etc. Failure (400) when images are not the same person or quality/face checks fail.
+
+## Postman collection
+
+Use **`Face_Verification_API.postman_collection.json`** for testing:
+
+1. Open Postman → **Import** → select `Face_Verification_API.postman_collection.json`.
+2. Set collection variable **`base_url`** (e.g. `http://localhost:8000`).
+3. Run **Health Check**, then **POST Verify and Store** with 3 same-person images in form-data (`image1`, `image2`, `image3`; optional `user_id`).
+
+## Project structure
 
 ```
 backend/
 ├── app/
-│   ├── main.py              # FastAPI application
+│   ├── main.py           # FastAPI app, startup
+│   ├── config.py         # Env config
 │   ├── api/
-│   │   └── verify.py        # Verification endpoint
-│   ├── services/
-│   │   ├── face_detector.py # Face detection
-│   │   ├── embedding.py     # Embedding extraction
-│   │   ├── similarity.py    # Similarity computation
-│   │   └── quality_check.py # Quality validation
+│   │   └── verify.py     # /api/verify, /api/verify-and-store, /api/health
+│   ├── db/
+│   │   ├── database.py   # SQLAlchemy engine, session
+│   │   └── models.py     # Image model
 │   ├── schemas/
-│   │   └── response.py      # Pydantic models
+│   │   └── response.py   # Pydantic response models
+│   ├── services/
+│   │   ├── face_detector.py
+│   │   ├── embedding.py
+│   │   ├── similarity.py
+│   │   ├── quality_check.py
+│   │   └── storage.py     # Save verified images
 │   └── utils/
-│       └── image_utils.py   # Image preprocessing
+│       └── image_utils.py
+├── Face_Verification_API.postman_collection.json
+├── API.md                # API reference & examples
+├── CALL_SERVICE.md       # Service ko call kaise kare (Node.js, cURL, Postman)
 ├── requirements.txt
 └── README.md
 ```
 
-## Performance
+## Node.js integration
 
-### Optimization Tips
+For integrating this API from a Node.js (or any) backend, see **[CALL_SERVICE.md](CALL_SERVICE.md)** for:
 
-1. **Use GPU acceleration:**
-```python
-# In face_detector.py
-providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
-```
-
-2. **Adjust detection size:**
-```python
-# Smaller = faster, larger = more accurate
-det_size=(640, 640)  # Current
-det_size=(320, 320)  # Faster
-```
-
-3. **Enable workers:**
-```bash
-uvicorn app.main:app --workers 4
-```
-
-## Troubleshooting
-
-### Model download fails
-
-```bash
-# Manually download models
-mkdir -p ~/.insightface/models
-# Download from: https://github.com/deepinsight/insightface/releases
-```
-
-### Out of memory
-
-Reduce `det_size` or process images sequentially.
-
-### Slow processing
-
-Use GPU or reduce image resolution before upload.
-
-## Security
-
--  File size limits (10MB)
--  Format validation (JPEG/PNG only)
--  Single face validation
--  Quality checks
--  Add rate limiting in production
--  Add authentication in production
+- Base URL and endpoint
+- Request/response handling
+- Node.js examples (axios + FormData, Express + multer)
+- cURL and Postman testing
 
 ## License
 

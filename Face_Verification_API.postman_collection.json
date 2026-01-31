@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "Face Verification API",
+    "description": "Dating app face verification service. Use for Node.js integration and API testing.\n\n**Base URL:** Set `base_url` variable (e.g. http://localhost:8000).\n\n**Verify & Store:** Select 3 images (same person) in form-data for image1, image2, image3.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" }
+  ],
+  "item": [
+    {
+      "name": "Health & Info",
+      "item": [
+        {
+          "name": "Root - API Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/",
+            "description": "Service name, version, list of endpoints."
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{base_url}}/api/health",
+            "description": "Use for monitoring. Returns status, model_loaded, version."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify (no store)",
+      "item": [
+        {
+          "name": "POST Verify - 3 images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image1", "type": "file", "src": "", "description": "Select first image (JPEG/PNG)" },
+                { "key": "image2", "type": "file", "src": "", "description": "Select second image" },
+                { "key": "image3", "type": "file", "src": "", "description": "Select third image" }
+              ]
+            },
+            "url": "{{base_url}}/api/verify",
+            "description": "Only verifies same person. Does NOT store. Response: result (SAME_PERSON/DIFFERENT_PERSON), confidence, similarity scores."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify and Store (use this for profile)",
+      "item": [
+        {
+          "name": "POST Verify and Store - 3 images + user_id",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image1", "type": "file", "src": "", "description": "First image (same person)" },
+                { "key": "image2", "type": "file", "src": "", "description": "Second image (same person)" },
+                { "key": "image3", "type": "file", "src": "", "description": "Third image (same person)" },
+                { "key": "user_id", "type": "text", "value": "user_123", "description": "Optional - your app user ID" }
+              ]
+            },
+            "url": "{{base_url}}/api/verify-and-store",
+            "description": "Verifies same person. If OK, stores images in DB and returns stored_images (id, storage_path, etc.). If different person → 400."
+          }
+        }
+      ]
+    }
+  ]
+}

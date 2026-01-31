@@ -15,6 +15,9 @@ scikit-learn==1.4.0
 # Image Processing
 Pillow==10.2.0
 tf-keras==2.20.1
+# Database (production: use PostgreSQL)
+sqlalchemy>=2.0.0
+psycopg2-binary>=2.9.9
+
 # Utilities
 python-dotenv==1.0.0
-# python -m pip install tf-keras
