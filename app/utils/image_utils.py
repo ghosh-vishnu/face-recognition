@@ -1,8 +1,12 @@
+import io
+import logging
+from typing import Optional, Tuple
+
 import cv2
 import numpy as np
 from PIL import Image
-import io
-from typing import Tuple, Optional
+
+logger = logging.getLogger(__name__)
 
 
 class ImageProcessor:
@@ -47,7 +51,7 @@ class ImageProcessor:
             return img_bgr
             
         except Exception as e:
-            print(f"Error processing image: {e}")
+            logger.warning("Error processing image: %s", e)
             return None
     
     @staticmethod

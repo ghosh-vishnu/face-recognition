@@ -1,28 +1,26 @@
+import logging
+
+import cv2
 import numpy as np
 from deepface import DeepFace
-from typing import Optional, Tuple, Dict
-import cv2
-import os
+from typing import Dict, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 class FaceDetector:
-    
     def __init__(self):
-        """Initialize DeepFace model"""
-        self.model_name = 'Facenet512'  # High accuracy model
-        self.detector_backend = 'opencv'  # Fast detector
-        print("DeepFace model initialized successfully")
-    
+        """Initialize DeepFace model."""
+        self.model_name = "Facenet512"
+        self.detector_backend = "opencv"
+        logger.info("DeepFace model initialized successfully")
+
     def _initialize_model(self):
-        # DeepFace initializes on first use
         pass
-    
+
     def detect_single_face(self, image: np.ndarray) -> Tuple[bool, Optional[Dict], str]:
         try:
-            # DeepFace expects RGB images
             rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            
-            # Detect faces using DeepFace
             try:
                 face_objs = DeepFace.extract_faces(
                     img_path=rgb_image,
@@ -60,30 +58,26 @@ class FaceDetector:
             }
             
             return True, face_data, "Face detected successfully"
-            
+
         except Exception as e:
             return False, None, f"Face detection error: {str(e)}"
-    
+
     def get_face_info(self, face) -> Dict:
-        # facial_area is {x, y, w, h}
-        area = face['facial_area']
+        area = face["facial_area"]
         x, y, w, h = area['x'], area['y'], area['w'], area['h']
         
         info = {
-            'bbox': [x, y, x + w, y + h],  # [x1, y1, x2, y2]
-            'confidence': float(face.get('confidence', 1.0)),
-            'face_area': int(w * h),
-            'embedding_shape': face['encoding'].shape if face['encoding'] is not None else None
+            "bbox": [x, y, x + w, y + h],
+            "confidence": float(face.get("confidence", 1.0)),
+            "face_area": int(w * h),
+            "embedding_shape": face["encoding"].shape if face["encoding"] is not None else None,
         }
-        
         return info
-    
+
     def visualize_detection(self, image: np.ndarray, face) -> np.ndarray:
         vis_image = image.copy()
-        area = face['facial_area']
-        x, y, w, h = area['x'], area['y'], area['w'], area['h']
-        
-        # Draw bounding box
+        area = face["facial_area"]
+        x, y, w, h = area["x"], area["y"], area["w"], area["h"]
         cv2.rectangle(
             vis_image,
             (x, y),
@@ -91,9 +85,7 @@ class FaceDetector:
             (0, 255, 0),
             2
         )
-        
-        # Draw confidence
-        conf = face.get('confidence', 1.0)
+        conf = face.get("confidence", 1.0)
         cv2.putText(
             vis_image,
             f"Face: {conf:.2f}",

@@ -58,9 +58,15 @@ Copy `.env.example` to `.env` and adjust:
 | Variable        | Default              | Description                    |
 |-----------------|----------------------|--------------------------------|
 | `DATABASE_URL`  | `sqlite:///./face_verify.db` | DB connection string   |
-| `UPLOAD_DIR`    | `uploads`            | Directory for verified images  |
+| `CLOUDINARY_CLOUD_NAME` | — | Cloudinary cloud name (from dashboard) |
+| `CLOUDINARY_API_KEY`    | — | Cloudinary API key |
+| `CLOUDINARY_API_SECRET` | — | Cloudinary API secret |
+| `CLOUDINARY_FOLDER`     | `face_verify` | Folder name in Cloudinary |
+| `UPLOAD_DIR`    | `uploads`            | Local fallback when Cloudinary not set |
 | `CORS_ORIGINS`  | `*`                  | Comma-separated allowed origins |
 | `MAX_IMAGE_SIZE_MB` | `10`            | Max image size (MB)            |
+
+**Cloudinary:** When `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET` are set, verified images are uploaded to Cloudinary. Response `stored_images[].storage_path` will be the Cloudinary **secure URL**. If not set, images are saved locally under `UPLOAD_DIR`.
 
 ## API summary
 

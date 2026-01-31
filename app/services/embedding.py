@@ -1,55 +1,49 @@
+import logging
+
 import numpy as np
 from typing import Optional
-class EmbeddingExtractor:    
+
+logger = logging.getLogger(__name__)
+
+
+class EmbeddingExtractor:
     def __init__(self):
-        """Initialize embedding extractor"""
+        """Initialize embedding extractor."""
         self.embedding_dim = 512
-    
+
     def extract_embedding(self, face) -> Optional[np.ndarray]:
         try:
-            # For DeepFace, face is a dict with 'encoding' key
-            if isinstance(face, dict) and 'encoding' in face:
-                embedding = face['encoding']
+            if isinstance(face, dict) and "encoding" in face:
+                embedding = face["encoding"]
             else:
-                print("Face object does not have encoding")
+                logger.debug("Face object does not have encoding")
                 return None
-            
-            # Ensure it's a numpy array
+
             if not isinstance(embedding, np.ndarray):
                 embedding = np.array(embedding)
-            
-            # Validate embedding
+
             if embedding is None or len(embedding) == 0:
-                print("Empty embedding")
+                logger.debug("Empty embedding")
                 return None
-            
-            # DeepFace Facenet512 uses 512-dim embeddings
-            # Update expected dimension dynamically
+
             if embedding.shape[0] != self.embedding_dim:
                 self.embedding_dim = embedding.shape[0]
-            
-            # Normalize embedding (L2 norm)
+
             norm = np.linalg.norm(embedding)
             if norm > 0:
                 embedding = embedding / norm
-            
+
             return embedding.astype(np.float32)
-            
+
         except Exception as e:
-            print(f"Error extracting embedding: {e}")
+            logger.warning("Error extracting embedding: %s", e)
             return None
-    
+
     def extract_batch_embeddings(self, faces: list) -> list:
         embeddings = []
-        for i, face in enumerate(faces):
+        for face in faces:
             emb = self.extract_embedding(face)
-            if emb is not None:
-                embeddings.append(emb)
-                print(f"Extracted embedding {i+1}/{len(faces)}")
-            else:
-                embeddings.append(None)
-                print(f"Failed to extract embedding {i+1}/{len(faces)}")
-        
+            embeddings.append(emb)
         return embeddings
     
     def validate_embedding(self, embedding: np.ndarray) -> bool:

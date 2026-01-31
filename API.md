@@ -129,6 +129,8 @@ Verify that 3 images are the **same person**. If yes, **store** images in DB and
 
 **Response 200 — Success (same person, stored)**
 
+When Cloudinary is configured, `storage_path` is the image’s **Cloudinary secure URL**. Otherwise it’s a local file path.
+
 ```json
 {
   "result": "SAME_PERSON",
@@ -142,7 +144,7 @@ Verify that 3 images are the **same person**. If yes, **store** images in DB and
   "stored_images": [
     {
       "id": 1,
-      "storage_path": "uploads/2026/01/31/abc123.jpg",
+      "storage_path": "https://res.cloudinary.com/your-cloud/image/upload/v1/face_verify/abc123.jpg",
       "original_filename": "photo1.jpg",
       "mimetype": "image/jpeg",
       "size_bytes": 12345
